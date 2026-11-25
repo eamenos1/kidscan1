@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kids English Adventure - 1st Grade</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka for playful, super legible primary school typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for extra visual icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti for celebrations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #f0f9ff;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Custom bounce and pop animations for kids */
+        @keyframes pop {
+            0% { transform: scale(0.95); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: pop 0.3s ease-out;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        .speaking-pulse {
+            animation: pulse-ring 1.5s infinite;
+        }
+
+        .card-shadow {
+            box-shadow: 0 8px 0 rgba(0, 0, 0, 0.12);
+            transition: all 0.15s ease;
+        }
+        .card-shadow:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.12);
+        }
+
+        /* Hide scrollbars cleanly */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-800">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white shadow-md sticky top-0 z-30 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="goHome()">
+            <div class="bg-amber-400 text-white w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-sm">
+                🦁
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold text-indigo-600 leading-none">English Fun!</h1>
+                <p class="text-xs sm:text-sm text-slate-500 font-medium">1st Grade • Listen & Speak</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-4">
+            <!-- Star Counter -->
+            <div class="bg-amber-100 border-2 border-amber-300 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                <span class="text-xl">⭐</span>
+                <span id="starCount" class="font-bold text-amber-700 text-lg">0</span>
+            </div>
+
+            <!-- Voice Speed Toggle (Normal / Slow for learners) -->
+            <button id="speedBtn" onclick="toggleSpeed()" class="bg-sky-100 hover:bg-sky-200 text-sky-700 border-2 border-sky-300 px-3 py-1.5 rounded-full font-semibold text-sm flex items-center gap-1.5 transition" title="Change Voice Speed">
+                <span id="speedIcon">🐇</span>
+                <span id="speedLabel" class="hidden sm:inline">Normal</span>
+            </button>
+
+            <!-- Home Button -->
+            <button id="homeBtn" onclick="goHome()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-2xl shadow-sm transition">
+                <i class="fas fa-home text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main id="appContainer" class="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 flex flex-col">
+        
+        <!-- HOME VIEW: Unit Selector -->
+        <section id="homeView" class="space-y-6 animate-pop">
+            <div class="text-center space-y-2 py-2">
+                <h2 class="text-2xl sm:text-3xl font-bold text-slate-800">Choose a Topic! 👇</h2>
+                <p class="text-slate-600 text-base sm:text-lg">Tap any unit to listen, play, and speak English!</p>
+            </div>
+
+            <!-- Grid of Units matching the exact textbook syllabus -->
+            <div id="unitsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                <!-- Populated by JS -->
+            </div>
+        </section>
+
+        <!-- UNIT WORKSPACE VIEW -->
+        <section id="unitView" class="hidden flex-1 flex flex-col space-y-5 animate-pop">
+            
+            <!-- Unit Banner Header -->
+            <div id="unitBanner" class="rounded-3xl p-5 sm:p-6 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-4 text-center sm:text-left">
+                    <div id="unitBigIcon" class="text-5xl sm:text-6xl bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
+                        🎒
+                    </div>
+                    <div>
+                        <span id="unitTag" class="uppercase tracking-wider text-xs font-bold bg-black/20 px-3 py-1 rounded-full">Unit 1</span>
+                        <h2 id="unitTitle" class="text-2xl sm:text-3xl font-bold mt-1">What's in your classroom?</h2>
+                    </div>
+                </div>
+                
+                <!-- Big Listen to Question Button -->
+                <button onclick="speakUnitTitle()" class="bg-white text-slate-800 hover:bg-slate-100 px-5 py-3 rounded-2xl font-bold shadow-md flex items-center gap-2 text-lg transition active:scale-95">
+                    <i class="fas fa-volume-up text-indigo-600 text-xl"></i>
+                    <span>Listen Title</span>
+                </button>
+            </div>
+
+            <!-- Activity Mode Tabs (Visual & Oral focused) -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                <button onclick="setMode('vocab')" id="tab-vocab" class="mode-tab bg-white border-b-4 border-indigo-600 text-indigo-700 py-3 px-2 rounded-2xl font-bold text-sm sm:text-base shadow-sm flex flex-col sm:flex-row items-center justify-center gap-1.5 transition">
+                    <span class="text-2xl">🗣️</span>
+                    <span>1. Say the Word</span>
+                </button>
+                <button onclick="setMode('sentences')" id="tab-sentences" class="mode-tab bg-white/70 hover:bg-white text-slate-600 py-3 px-2 rounded-2xl font-bold text-sm sm:text-base shadow-sm flex flex-col sm:flex-row items-center justify-center gap-1.5 transition">
+                    <span class="text-2xl">💬</span>
+                    <span>2. Ask & Answer</span>
+                </button>
+                <button onclick="setMode('game')" id="tab-game" class="mode-tab bg-white/70 hover:bg-white text-slate-600 py-3 px-2 rounded-2xl font-bold text-sm sm:text-base shadow-sm flex flex-col sm:flex-row items-center justify-center gap-1.5 transition">
+                    <span class="text-2xl">👆</span>
+                    <span>3. Touch & Find</span>
+                </button>
+                <button onclick="setMode('speak')" id="tab-speak" class="mode-tab bg-white/70 hover:bg-white text-slate-600 py-3 px-2 rounded-2xl font-bold text-sm sm:text-base shadow-sm flex flex-col sm:flex-row items-center justify-center gap-1.5 transition">
+                    <span class="text-2xl">🎤</span>
+                    <span>4. Phonics & Mic</span>
+                </button>
+            </div>
+
+            <!-- Dynamic Content Area -->
+            <div id="activityArea" class="flex-1 bg-white rounded-3xl p-5 sm:p-8 shadow-md border-2 border-slate-100 flex flex-col justify-between">
+                <!-- Populated dynamically based on selected mode -->
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Custom Toast Feedback Modal (No alert() used!) -->
+    <div id="feedbackToast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform translate-y-4">
+        <div id="feedbackContent" class="bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl font-bold text-lg flex items-center gap-3">
+            <span id="feedbackEmoji">🌟</span>
+            <span id="feedbackText">Great job!</span>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * SYLLABUS DATA FOR 1ST GRADE PRIMARY
+         * Strictly mapped to the uploaded curriculum image:
+         * Starter, Units 1-6, and Festivals (Christmas, Easter, Earth Day)
+         * Includes dynamic sentence generators so every click produces fresh examples!
+         */
+        const SYLLABUS = [
+            {
+                id: 'starter',
+                tag: 'Starter Unit',
+                title: 'Are you curious?',
+                icon: '🌈',
+                color: 'bg-pink-500',
+                lightColor: 'bg-pink-50',
+                borderColor: 'border-pink-300',
+                textColor: 'text-pink-700',
+                vocab: [
+                    { word: 'Hello!', emoji: '👋', cat: 'greetings' },
+                    { word: 'Goodbye!', emoji: '🙋‍♂️', cat: 'greetings' },
+                    { word: 'Red', emoji: '🔴', cat: 'colour' },
+                    { word: 'Blue', emoji: '🔵', cat: 'colour' },
+                    { word: 'Yellow', emoji: '🟡', cat: 'colour' },
+                    { word: 'Green', emoji: '🟢', cat: 'colour' },
+                    { word: 'Sunny', emoji: '☀️', cat: 'weather' },
+                    { word: 'Rainy', emoji: '🌧️', cat: 'weather' },
+                    { word: 'Cloudy', emoji: '☁️', cat: 'weather' },
+                    { word: 'Windy', emoji: '💨', cat: 'weather' },
+                    { word: 'Six', emoji: '6️⃣', cat: 'number' },
+                    { word: 'Seven', emoji: '7️⃣', cat: 'number' }
+                ],
+                phonics: {
+                    sound: 'Greetings & Chant',
+                    phrase: "Nice to meet you, Sam! What's your name?",
+                    emoji: '🤝'
+                },
+                functional: "What's your name? I'm Laura!",
+                generateSentence: () => {
+                    const types = [
+                        () => {
+                            const names = ['Laura', 'Sam', 'Leo', 'Mia', 'Alex', 'Chloe'];
+                            const name = pick(names);
+                            return {
+                                q: "What's your name?",
+                                a: `I'm ${name}.`,
+                                emojis: ['🗣️', '🧒'],
+                                label: `Name: ${name}`
+                            };
+                        },
+                        () => {
+                            const ages = ['six', 'seven', 'five', 'eight'];
+                            const nums = {'five':'5️⃣', 'six':'6️⃣', 'seven':'7️⃣', 'eight':'8️⃣'};
+                            const age = pick(ages);
+                            return {
+                                q: "How old are you?",
+                                a: `I'm ${age}.`,
+                                emojis: ['🎂', nums[age]],
+                                label: `Age: ${age}`
+                            };
+                        },
+                        () => {
+                            const cols = [
+                                {w: 'red', e: '🍎🔴'}, {w: 'blue', e: '🐳🔵'},
+                                {w: 'yellow', e: '🍌🟡'}, {w: 'green', e: '🐸🟢'},
+                                {w: 'orange', e: '🍊🟠'}, {w: 'pink', e: '🦩🩷'}
+                            ];
+                            const c = pick(cols);
+                            return {
+                                q: "What colour is it?",
+                                a: `It's ${c.w}.`,
+                                emojis: [c.e],
+                                label: `Colour: ${c.w}`
+                            };
+                        },
+                        () => {
+                            const weathers = [
+                                {w: 'sunny', e: '☀️😎'}, {w: 'rainy', e: '🌧️☔'},
+                                {w: 'cloudy', e: '☁️🌥️'}, {w: 'windy', e: '🌬️🍃'}
+                            ];
+                            const wt = pick(weathers);
+                            return {
+                                q: "What's the weather like?",
+                                a: `It's ${wt.w}.`,
+                                emojis: [wt.e],
+                                label: `Weather: ${wt.w}`
+                            };
+                        }
+                    ];
+                    return pick(types)();
+                }
+            },
+            {
+                id: 'unit1',
+                tag: 'Unit 1',
+                title: "What's in your classroom?",
+                icon: '✏️',
+                color: 'bg-red-500',
+                lightColor: 'bg-red-50',
+                borderColor: 'border-red-300',
+                textColor: 'text-red-700',
+                vocab: [
+                    { word: 'computer', emoji: '💻' },
+                    { word: 'crayon', emoji: '🖍️' },
+                    { word: 'pen', emoji: '🖊️' },
+                    { word: 'pencil', emoji: '✏️' },
+                    { word: 'pencil case', emoji: '👝' },
+                    { 
+                        word: 'rubber', 
+                        emoji: `<svg viewBox="0 0 64 64" class="w-14 h-14 sm:w-16 sm:h-16 inline-block" aria-label="rubber">
+                            <g transform="rotate(-25 32 32)">
+                                <rect x="10" y="20" width="44" height="24" rx="5" fill="#f87171" stroke="#dc2626" stroke-width="3"/>
+                                <rect x="34" y="20" width="20" height="24" rx="3" fill="#60a5fa" stroke="#2563eb" stroke-width="3"/>
+                                <rect x="24" y="20" width="14" height="24" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>
+                            </g>
+                        </svg>`
+                    },
+                    { word: 'ruler', emoji: '📏' },
+                    { 
+                        word: 'sharpener', 
+                        emoji: `<svg viewBox="0 0 64 64" class="w-14 h-14 sm:w-16 sm:h-16 inline-block" aria-label="sharpener">
+                            <rect x="12" y="14" width="40" height="36" rx="8" fill="#ef4444" stroke="#b91c1c" stroke-width="3"/>
+                            <rect x="24" y="18" width="16" height="28" rx="2" fill="#cbd5e1" stroke="#64748b" stroke-width="2"/>
+                            <line x1="32" y1="20" x2="32" y2="44" stroke="#475569" stroke-width="2"/>
+                            <circle cx="32" cy="32" r="3" fill="#334155"/>
+                            <path d="M12 24 Q18 32 12 40" fill="none" stroke="#991b1b" stroke-width="3"/>
+                            <path d="M52 24 Q46 32 52 40" fill="none" stroke="#991b1b" stroke-width="3"/>
+                        </svg>`
+                    },
+                    { word: 'bin', emoji: '🗑️' },
+                    { word: 'cupboard', emoji: '🗄️' },
+                    { 
+                        word: 'desk', 
+                        emoji: `<svg viewBox="0 0 64 64" class="w-14 h-14 sm:w-16 sm:h-16 inline-block" aria-label="desk">
+                            <rect x="14" y="28" width="36" height="24" rx="2" fill="#d97706" stroke="#92400e" stroke-width="3"/>
+                            <rect x="10" y="22" width="44" height="7" rx="3" fill="#fbbf24" stroke="#b45309" stroke-width="3"/>
+                            <line x1="14" y1="52" x2="14" y2="58" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
+                            <line x1="50" y1="52" x2="50" y2="58" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
+                            <circle cx="32" cy="40" r="2.5" fill="#78350f"/>
+                        </svg>`
+                    },
+                    { 
+                        word: 'shelf', 
+                        emoji: `<svg viewBox="0 0 64 64" class="w-14 h-14 sm:w-16 sm:h-16 inline-block" aria-label="shelf">
+                            <rect x="8" y="42" width="48" height="7" rx="3" fill="#d97706" stroke="#92400e" stroke-width="3"/>
+                            <path d="M16 49 L16 57 L24 49 Z" fill="#64748b"/>
+                            <path d="M48 49 L48 57 L40 49 Z" fill="#64748b"/>
+                            <rect x="14" y="22" width="7" height="20" rx="1.5" fill="#ef4444" stroke="#991b1b" stroke-width="2"/>
+                            <rect x="22" y="25" width="7" height="17" rx="1.5" fill="#3b82f6" stroke="#1d4ed8" stroke-width="2"/>
+                            <rect x="30" y="20" width="7" height="22" rx="1.5" fill="#22c55e" stroke="#15803d" stroke-width="2"/>
+                            <circle cx="46" cy="35" r="7" fill="#facc15" stroke="#ca8a04" stroke-width="2"/>
+                        </svg>`
+                    }
+                ],
+                phonics: {
+                    sound: '/r/ sound',
+                    phrase: "Red robots on a red ruler.",
+                    emoji: '🤖📏'
+                },
+                functional: "Can I have a rubber, please? Here you are!",
+                generateSentence: () => {
+                    const items = [
+                        {w: 'pen', e: '🖊️'}, {w: 'pencil', e: '✏️'}, {w: 'ruler', e: '📏'},
+                        {
+                            w: 'rubber', 
+                            e: `<svg viewBox="0 0 64 64" class="w-16 h-16 inline-block align-middle" aria-label="rubber">
+                                <g transform="rotate(-25 32 32)">
+                                    <rect x="10" y="20" width="44" height="24" rx="5" fill="#f87171" stroke="#dc2626" stroke-width="3"/>
+                                    <rect x="34" y="20" width="20" height="24" rx="3" fill="#60a5fa" stroke="#2563eb" stroke-width="3"/>
+                                    <rect x="24" y="20" width="14" height="24" fill="#f8fafc" stroke="#94a3b8" stroke-width="2"/>
+                                </g>
+                            </svg>`
+                        },
+                        {w: 'crayon', e: '🖍️'}, 
+                        {
+                            w: 'sharpener', 
+                            e: `<svg viewBox="0 0 64 64" class="w-16 h-16 inline-block align-middle" aria-label="sharpener">
+                                <rect x="12" y="14" width="40" height="36" rx="8" fill="#ef4444" stroke="#b91c1c" stroke-width="3"/>
+                                <rect x="24" y="18" width="16" height="28" rx="2" fill="#cbd5e1" stroke="#64748b" stroke-width="2"/>
+                                <line x1="32" y1="20" x2="32" y2="44" stroke="#475569" stroke-width="2"/>
+                                <circle cx="32" cy="32" r="3" fill="#334155"/>
+                            </svg>`
+                        },
+                        {w: 'pencil case', e: '👝'}, {w: 'computer', e: '💻'}
+                    ];
+                    const places = [
+                        {
+                            w: 'on the desk', 
+                            e: `<svg viewBox="0 0 64 64" class="w-16 h-16 inline-block align-middle" aria-label="desk">
+                                <rect x="14" y="28" width="36" height="24" rx="2" fill="#d97706" stroke="#92400e" stroke-width="3"/>
+                                <rect x="10" y="22" width="44" height="7" rx="3" fill="#fbbf24" stroke="#b45309" stroke-width="3"/>
+                                <line x1="14" y1="52" x2="14" y2="58" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
+                                <line x1="50" y1="52" x2="50" y2="58" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
+                            </svg>`
+                        },
+                        {w: 'on the floor', e: '⬇️'},
+                        {w: 'in the cupboard', e: '🗄️'},
+                        {
+                            w: 'on the shelf', 
+                            e: `<svg viewBox="0 0 64 64" class="w-16 h-16 inline-block align-middle" aria-label="shelf">
+                                <rect x="8" y="42" width="48" height="7" rx="3" fill="#d97706" stroke="#92400e" stroke-width="3"/>
+                                <path d="M16 49 L16 57 L24 49 Z" fill="#64748b"/>
+                                <path d="M48 49 L48 57 L40 49 Z" fill="#64748b"/>
+                                <rect x="14" y="22" width="7" height="20" rx="1.5" fill="#ef4444" stroke="#991b1b" stroke-width="2"/>
+                                <rect x="22" y="25" width="7" height="17" rx="1.5" fill="#3b82f6" stroke="#1d4ed8" stroke-width="2"/>
+                                <rect x="30" y="20" width="7" height="22" rx="1.5" fill="#22c55e" stroke="#15803d" stroke-width="2"/>
+                            </svg>`
+                        },
+                        {w: 'in the bin', e: '🗑️'}
+                    ];
+                    const item = pick(items);
+                    const isHere = Math.random() > 0.5;
+                    if (isHere) {
+                        return {
+                            q: `Where's my ${item.w}?`,
+                            a: `It's here!`,
+                            emojis: ['👇', item.e],
+                            label: `${item.w} -> here`
+                        };
+                    } else {
+                        const place = pick(places);
+                        return {
+                            q: `Where's the ${item.w}?`,
+                            a: `The ${item.w} is ${place.w}.`,
+                            emojis: [item.e, place.e],
+                            label: `${item.w} ${place.w}`
+                        };
+                    }
+                }
+            },
+            {
+                id: 'unit2',
+                tag: 'Unit 2',
+                title: 'How are families different?',
+                icon: '👨‍👩‍👧‍👦',
+                color: 'bg-orange-500',
+                lightColor: 'bg-orange-50',
+                borderColor: 'border-orange-300',
+                textColor: 'text-orange-700',
+                vocab: [
+                    { word: 'mum', emoji: '👩' },
+                    { word: 'dad', emoji: '👨' },
+                    { word: 'brother', emoji: '👦' },
+                    { word: 'sister', emoji: '👧' },
+                    { word: 'grandma', emoji: '👵' },
+                    { word: 'grandpa', emoji: '👴' },
+                    { word: 'aunt', emoji: '👩‍🦱' },
+                    { word: 'uncle', emoji: '🧔' },
+                    { word: 'old', emoji: '🧓' },
+                    { word: 'young', emoji: '👶' },
+                    { word: 'tall', emoji: '🦒' },
+                    { word: 'short', emoji: '🐁' }
+                ],
+                phonics: {
+                    sound: '/s/ sound',
+                    phrase: "Six sad squirrels on a scooter.",
+                    emoji: '🐿️🛴'
+                },
+                functional: "How are you today? I'm happy, thank you!",
+                generateSentence: () => {
+                    const members = [
+                        {w: 'aunt', e: '👩‍🦱'}, {w: 'uncle', e: '🧔'},
+                        {w: 'brother', e: '👦'}, {w: 'sister', e: '👧'},
+                        {w: 'grandma', e: '👵'}, {w: 'grandpa', e: '👴'},
+                        {w: 'mum', e: '👩'}, {w: 'dad', e: '👨'}
+                    ];
+                    const m1 = pick(members);
+                    const mode = Math.floor(Math.random() * 3);
+                    if (mode === 0) {
+                        return {
+                            q: "Who's this?",
+                            a: `This is my ${m1.w}.`,
+                            emojis: ['👉', m1.e],
+                            label: `My ${m1.w}`
+                        };
+                    } else if (mode === 1) {
+                        return {
+                            q: `Is this your ${m1.w}?`,
+                            a: `Yes, it is.`,
+                            emojis: [m1.e, '✅'],
+                            label: `Yes (${m1.w})`
+                        };
+                    } else {
+                        const m2 = pick(members.filter(x => x.w !== m1.w));
+                        return {
+                            q: `Is this your ${m1.w}?`,
+                            a: `No, it isn't. This is my ${m2.w}.`,
+                            emojis: [m2.e, '❌'],
+                            label: `No, it's my ${m2.w}`
+                        };
+                    }
+                }
+            },
+            {
+                id: 'unit3',
+                tag: 'Unit 3',
+                title: 'Where do pets live?',
+                icon: '🐶',
+                color: 'bg-amber-400',
+                lightColor: 'bg-amber-50',
+                borderColor: 'border-amber-300',
+                textColor: 'text-amber-800',
+                vocab: [
+                    { word: 'bird', emoji: '🐦' },
+                    { word: 'cat', emoji: '🐱' },
+                    { word: 'dog', emoji: '🐶' },
+                    { word: 'fish', emoji: '🐠' },
+                    { word: 'hamster', emoji: '🐹' },
+                    { word: 'horse', emoji: '🐴' },
+                    { word: 'rabbit', emoji: '🐰' },
+                    { word: 'tortoise', emoji: '🐢' },
+                    { word: 'fast', emoji: '⚡' },
+                    { word: 'slow', emoji: '🐌' },
+                    { word: 'friendly', emoji: '🥰' },
+                    { word: 'scary', emoji: '😱' }
+                ],
+                phonics: {
+                    sound: '/f/ sound',
+                    phrase: "My five fish have fun.",
+                    emoji: '🐠5️⃣'
+                },
+                functional: "What's your favourite pet? My favourite pet is a dog!",
+                generateSentence: () => {
+                    const pets = [
+                        {w: 'dog', e: '🐶'}, {w: 'cat', e: '🐱'}, {w: 'rabbit', e: '🐰'},
+                        {w: 'fish', e: '🐠'}, {w: 'hamster', e: '🐹'}, {w: 'bird', e: '🐦'},
+                        {w: 'tortoise', e: '🐢'}, {w: 'horse', e: '🐴'}
+                    ];
+                    const p = pick(pets);
+                    const mode = Math.floor(Math.random() * 3);
+                    if (mode === 0) {
+                        return {
+                            q: "What pet have you got?",
+                            a: `I've got a ${p.w}.`,
+                            emojis: ['🙋', p.e],
+                            label: `Got a ${p.w}`
+                        };
+                    } else if (mode === 1) {
+                        return {
+                            q: `Have you got a ${p.w}?`,
+                            a: `Yes, I have.`,
+                            emojis: [p.e, '✅'],
+                            label: `Yes (${p.w})`
+                        };
+                    } else {
+                        return {
+                            q: `Have you got a ${p.w}?`,
+                            a: `No, I haven't. I haven't got a ${p.w}.`,
+                            emojis: [p.e, '🚫'],
+                            label: `No ${p.w}`
+                        };
+                    }
+                }
+            },
+            {
+                id: 'unit4',
+                tag: 'Unit 4',
+                title: 'What do monsters look like?',
+                icon: '👾',
+                color: 'bg-lime-600',
+                lightColor: 'bg-lime-50',
+                borderColor: 'border-lime-300',
+                textColor: 'text-lime-800',
+                vocab: [
+                    { word: 'head', emoji: '🗣️' },
+                    { word: 'eyes', emoji: '👀' },
+                    { word: 'ears', emoji: '👂' },
+                    { word: 'nose', emoji: '👃' },
+                    { word: 'mouth', emoji: '👄' },
+                    { word: 'arms', emoji: '💪' },
+                    { word: 'hands', emoji: '🙌' },
+                    { word: 'fingers', emoji: '🖐️' },
+                    { word: 'legs', emoji: '🦵' },
+                    { word: 'feet', emoji: '🦶' },
+                    { word: 'toes', emoji: '👣' },
+                    { word: 'body', emoji: '🧍' }
+                ],
+                phonics: {
+                    sound: '/g/ sound',
+                    phrase: "Goat's got a good idea.",
+                    emoji: '🐐💡'
+                },
+                functional: "Good idea! Let's make a monster mask!",
+                generateSentence: () => {
+                    const singular = [
+                        {w: 'mouth', e: '👄'}, {w: 'nose', e: '👃'}, {w: 'head', e: '👾'}
+                    ];
+                    const plural = [
+                        {w: 'eyes', e: '👀', n: ['two', 'three', 'four', 'five']},
+                        {w: 'ears', e: '👂', n: ['two', 'four', 'six']},
+                        {w: 'arms', e: '💪', n: ['two', 'four', 'six']},
+                        {w: 'hands', e: '🙌', n: ['two', 'four']},
+                        {w: 'fingers', e: '🖐️', n: ['eight', 'ten']},
+                        {w: 'legs', e: '🦵', n: ['two', 'three', 'four']},
+                        {w: 'toes', e: '👣', n: ['six', 'eight', 'ten']}
+                    ];
+                    const mode = Math.floor(Math.random() * 3);
+                    if (mode === 0) {
+                        const s = pick(singular);
+                        return {
+                            q: "Point to your monster face!",
+                            a: `This is my ${s.w}.`,
+                            emojis: ['👉', s.e],
+                            label: `My ${s.w}`
+                        };
+                    } else if (mode === 1) {
+                        const pl = pick(plural);
+                        return {
+                            q: "Show me your monster body!",
+                            a: `These are my ${pl.w}.`,
+                            emojis: ['👉', pl.e],
+                            label: `My ${pl.w}`
+                        };
+                    } else {
+                        const pl = pick(plural);
+                        const num = pick(pl.n);
+                        return {
+                            q: `How many ${pl.w} have you got?`,
+                            a: `I've got ${num} ${pl.w}.`,
+                            emojis: ['👾', pl.e],
+                            label: `${num} ${pl.w}`
+                        };
+                    }
+                }
+            },
+            {
+                id: 'unit5',
+                tag: 'Unit 5',
+                title: 'What can you do in your park?',
+                icon: '🛝',
+                color: 'bg-cyan-500',
+                lightColor: 'bg-cyan-50',
+                borderColor: 'border-cyan-300',
+                textColor: 'text-cyan-800',
+                vocab: [
+                    { word: 'catch a ball', emoji: '⚾' },
+                    { word: 'climb', emoji: '🧗' },
+                    { word: 'jump', emoji: '🦘' },
+                    { word: 'play football', emoji: '⚽' },
+                    { word: 'ride a bike', emoji: '🚴' },
+                    { word: 'ride a horse', emoji: '🏇' },
+                    { word: 'run', emoji: '🏃' },
+                    { word: 'skip', emoji: '🪢' },
+                    { word: 'dance', emoji: '💃' },
+                    { word: 'hop', emoji: '🐇' },
+                    { word: 'fly a kite', emoji: '🪁' },
+                    { word: 'swim', emoji: '🏊' }
+                ],
+                phonics: {
+                    sound: '/h/ sound',
+                    phrase: "Helen helps the hot horse.",
+                    emoji: '👧🐴🥵'
+                },
+                functional: "Can you help me? Yes, of course!",
+                generateSentence: () => {
+                    const actions = [
+                        {w: 'run', e: '🏃'}, {w: 'swim', e: '🏊'}, {w: 'ride a bike', e: '🚴'},
+                        {w: 'climb', e: '🧗'}, {w: 'jump', e: '🦘'}, {w: 'play football', e: '⚽'},
+                        {w: 'dance', e: '💃'}, {w: 'fly a kite', e: '🪁'}, {w: 'catch a ball', e: '⚾'}
+                    ];
+                    const act = pick(actions);
+                    const mode = Math.floor(Math.random() * 4);
+                    if (mode === 0) {
+                        return {
+                            q: "What can you do?",
+                            a: `I can ${act.w}.`,
+                            emojis: [act.e, '💪'],
+                            label: `Can ${act.w}`
+                        };
+                    } else if (mode === 1) {
+                        return {
+                            q: "What can't you do?",
+                            a: `I can't ${act.w}.`,
+                            emojis: [act.e, '😅'],
+                            label: `Can't ${act.w}`
+                        };
+                    } else if (mode === 2) {
+                        return {
+                            q: `Can you ${act.w}?`,
+                            a: `Yes, I can!`,
+                            emojis: [act.e, '✅'],
+                            label: `Yes (${act.w})`
+                        };
+                    } else {
+                        return {
+                            q: `Can you ${act.w}?`,
+                            a: `No, I can't.`,
+                            emojis: [act.e, '❌'],
+                            label: `No (${act.w})`
+                        };
+                    }
+                }
+            },
+            {
+                id: 'unit6',
+                tag: 'Unit 6',
+                title: 'What food and drink do you like?',
+                icon: '🍦',
+                color: 'bg-purple-500',
+                lightColor: 'bg-purple-50',
+                borderColor: 'border-purple-300',
+                textColor: 'text-purple-800',
+                vocab: [
+                    { word: 'burgers', emoji: '🍔' },
+                    { word: 'cake', emoji: '🍰' },
+                    { word: 'chips', emoji: '🍟' },
+                    { word: 'eggs', emoji: '🥚' },
+                    { word: 'ice cream', emoji: '🍨' },
+                    { word: 'milkshake', emoji: '🥤' },
+                    { word: 'onions', emoji: '🧅' },
+                    { word: 'juice', emoji: '🧃' },
+                    { word: 'cherry', emoji: '🍒' },
+                    { word: 'chocolate', emoji: '🍫' },
+                    { word: 'lemon', emoji: '🍋' },
+                    { word: 'mango', emoji: '🥭' }
+                ],
+                phonics: {
+                    sound: '/θ/ (th) sound',
+                    phrase: "Three thin snakes are thirsty.",
+                    emoji: '🐍🐍🐍🥤'
+                },
+                functional: "I'm thirsty! Can I have some juice, please?",
+                generateSentence: () => {
+                    const foods = [
+                        {w: 'ice cream', e: '🍨'}, {w: 'cake', e: '🍰'}, {w: 'burgers', e: '🍔'},
+                        {w: 'chips', e: '🍟'}, {w: 'onions', e: '🧅'}, {w: 'juice', e: '🧃'},
+                        {w: 'milkshake', e: '🥤'}, {w: 'chocolate', e: '🍫'}, {w: 'mango', e: '🥭'}
+                    ];
+                    const f = pick(foods);
+                    const mode = Math.floor(Math.random() * 5);
+                    if (mode === 0) {
+                        return {
+                            q: "What food do you like?",
+                            a: `I like ${f.w}.`,
+                            emojis: ['😋', f.e],
+                            label: `Like ${f.w}`
+                        };
+                    } else if (mode === 1) {
+                        return {
+                            q: "What food do you love?",
+                            a: `I love ${f.w}!`,
+                            emojis: ['😍', f.e],
+                            label: `Love ${f.w}`
+                        };
+                    } else if (mode === 2) {
+                        return {
+                            q: "What food don't you like?",
+                            a: `I don't like ${f.w}.`,
+                            emojis: ['🤢', f.e],
+                            label: `Don't like ${f.w}`
+                        };
+                    } else if (mode === 3) {
+                        return {
+                            q: `Do you like ${f.w}?`,
+                            a: `Yes, I do!`,
+                            emojis: [f.e, '✅'],
+                            label: `Yes (${f.w})`
+                        };
+                    } else {
+                        return {
+                            q: `Do you like ${f.w}?`,
+                            a: `No, I don't.`,
+                            emojis: [f.e, '❌'],
+                            label: `No (${f.w})`
+                        };
+                    }
+                }
+            },
+            {
+                id: 'festivals',
+                tag: 'Festivals',
+                title: 'Christmas, Easter & Earth Day!',
+                icon: '🌍',
+                color: 'bg-emerald-600',
+                lightColor: 'bg-emerald-50',
+                borderColor: 'border-emerald-300',
+                textColor: 'text-emerald-800',
+                vocab: [
+                    { word: 'bell', emoji: '🔔' },
+                    { word: 'present', emoji: '🎁' },
+                    { word: 'sack', emoji: '🎅' },
+                    { word: 'star', emoji: '⭐' },
+                    { word: 'stocking', emoji: '🧦' },
+                    { word: 'bush', emoji: '🌳' },
+                    { word: 'Easter egg', emoji: '🥚' },
+                    { word: 'grass', emoji: '🌱' },
+                    { word: 'rock', emoji: '🪨' },
+                    { word: 'glass', emoji: '🫙' },
+                    { word: 'paper', emoji: '📄' },
+                    { word: 'plastic', emoji: '🧴' }
+                ],
+                phonics: {
+                    sound: 'Planet Hero Chant',
+                    phrase: "I recycle paper, glass and plastic. I'm a planet hero!",
+                    emoji: '♻️🦸‍♂️'
+                },
+                functional: "Merry Christmas! Happy Easter! I'm a planet hero!",
+                generateSentence: () => {
+                    const types = [
+                        () => ({
+                            q: "Look at the tree!",
+                            a: "This is my Christmas tree. Merry Christmas!",
+                            emojis: ['🎄', '🎅'],
+                            label: "Christmas"
+                        }),
+                        () => ({
+                            q: "Look in the grass!",
+                            a: "This is my Easter egg. Happy Easter!",
+                            emojis: ['🥚', '🐰'],
+                            label: "Easter"
+                        }),
+                        () => {
+                            const mats = [
+                                {w: 'paper', e: '📄'}, {w: 'glass', e: '🫙'}, {w: 'plastic', e: '🧴'}
+                            ];
+                            const m = pick(mats);
+                            return {
+                                q: "How do you help the Earth?",
+                                a: `I recycle ${m.w}. I'm a planet hero!`,
+                                emojis: ['♻️', m.e],
+                                label: `Recycle ${m.w}`
+                            };
+                        }
+                    ];
+                    return pick(types)();
+                }
+            }
+        ];
+
+        // App State
+        let currentUnit = null;
+        let currentMode = 'vocab';
+        let stars = 0;
+        let isSlowSpeech = false;
+        let currentSentenceObj = null;
+        let currentVocabItem = null;
+        let vocabDeck = [];
+        let gameTarget = null;
+        let gameOptions = [];
+        let isListening = false;
+
+        // Utility: Random picker
+        function pick(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        // Utility: Shuffle array
+        function shuffle(arr) {
+            return [...arr].sort(() => Math.random() - 0.5);
+        }
+
+        // Text-to-Speech (TTS) Engine
+        function speak(text, onEndCallback = null) {
+            if (!('speechSynthesis' in window)) {
+                if (onEndCallback) onEndCallback();
+                return;
+            }
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-GB';
+            utterance.rate = isSlowSpeech ? 0.72 : 0.95;
+            utterance.pitch = 1.1;
+
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(v => v.lang.includes('en-GB') && (v.name.includes('Female') || v.name.includes('Google') || v.name.includes('Daniel'))) 
+                                || voices.find(v => v.lang.startsWith('en'));
+            if (preferredVoice) utterance.voice = preferredVoice;
+
+            if (onEndCallback) {
+                utterance.onend = onEndCallback;
+            }
+            window.speechSynthesis.speak(utterance);
+        }
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+        }
+
+        function toggleSpeed() {
+            isSlowSpeech = !isSlowSpeech;
+            document.getElementById('speedIcon').textContent = isSlowSpeech ? '🐢' : '🐇';
+            document.getElementById('speedLabel').textContent = isSlowSpeech ? 'Slow' : 'Normal';
+            showToast(isSlowSpeech ? '🐢' : '🐇', isSlowSpeech ? 'Slow voice active!' : 'Normal voice speed!');
+        }
+
+        function addStars(amount = 1) {
+            stars += amount;
+            document.getElementById('starCount').textContent = stars;
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 35,
+                    spread: 60,
+                    origin: { y: 0.7 }
+                });
+            }
+        }
+
+        function showToast(emoji, text) {
+            const toast = document.getElementById('feedbackToast');
+            document.getElementById('feedbackEmoji').textContent = emoji;
+            document.getElementById('feedbackText').textContent = text;
+            
+            toast.classList.remove('opacity-0', 'translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-4');
+            }, 2200);
+        }
+
+        // Render Home Screen Units Grid
+        function renderHome() {
+            const grid = document.getElementById('unitsGrid');
+            grid.innerHTML = SYLLABUS.map(unit => `
+                <button onclick="openUnit('${unit.id}')" 
+                    class="text-left ${unit.lightColor} border-4 ${unit.borderColor} rounded-3xl p-5 flex items-center gap-4 card-shadow hover:brightness-95 transition group">
+                    <div class="${unit.color} text-white w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-4xl sm:text-5xl shadow-md shrink-0 group-hover:scale-105 transition">
+                        ${unit.icon}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <span class="inline-block text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white ${unit.textColor} shadow-sm mb-1">
+                            ${unit.tag}
+                        </span>
+                        <h3 class="text-lg sm:text-xl font-bold text-slate-800 leading-tight">
+                            ${unit.title}
+                        </h3>
+                    </div>
+                </button>
+            `).join('');
+        }
+
+        function goHome() {
+            window.speechSynthesis.cancel();
+            currentUnit = null;
+            document.getElementById('unitView').classList.add('hidden');
+            document.getElementById('homeBtn').classList.add('hidden');
+            document.getElementById('homeView').classList.remove('hidden');
+        }
+
+        function openUnit(unitId) {
+            currentUnit = SYLLABUS.find(u => u.id === unitId);
+            if (!currentUnit) return;
+
+            vocabDeck = shuffle(currentUnit.vocab);
+
+            document.getElementById('homeView').classList.add('hidden');
+            document.getElementById('unitView').classList.remove('hidden');
+            document.getElementById('homeBtn').classList.remove('hidden');
+
+            const banner = document.getElementById('unitBanner');
+            banner.className = `rounded-3xl p-5 sm:p-6 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 ${currentUnit.color}`;
+            document.getElementById('unitBigIcon').textContent = currentUnit.icon;
+            document.getElementById('unitTag').textContent = currentUnit.tag;
+            document.getElementById('unitTitle').textContent = currentUnit.title;
+
+            speak(currentUnit.title);
+            setMode('vocab');
+        }
+
+        function speakUnitTitle() {
+            if (currentUnit) speak(currentUnit.title);
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            window.speechSynthesis.cancel();
+
+            document.querySelectorAll('.mode-tab').forEach(btn => {
+                btn.classList.remove('bg-white', 'border-b-4', 'border-indigo-600', 'text-indigo-700');
+                btn.classList.add('bg-white/70', 'text-slate-600');
+            });
+            const activeTab = document.getElementById(`tab-${mode}`);
+            if (activeTab) {
+                activeTab.classList.remove('bg-white/70', 'text-slate-600');
+                activeTab.classList.add('bg-white', 'border-b-4', 'border-indigo-600', 'text-indigo-700');
+            }
+
+            if (mode === 'vocab') renderVocabMode();
+            else if (mode === 'sentences') renderSentencesMode();
+            else if (mode === 'game') renderGameMode();
+            else if (mode === 'speak') renderSpeakMode();
+        }
+
+        /**
+         * MODE 1: SAY THE WORD (ONE STUDENT AT A TIME ON THE BOARD)
+         * Shows a giant picture WITHOUT the word first so the student says it aloud,
+         * then reveals the word & audio on tap!
+         */
+        function renderVocabMode() {
+            if (vocabDeck.length === 0) {
+                vocabDeck = shuffle(currentUnit.vocab);
+            }
+            currentVocabItem = vocabDeck.pop();
+            const area = document.getElementById('activityArea');
+
+            area.innerHTML = `
+                <div class="flex-1 flex flex-col items-center justify-between space-y-6 text-center">
+                    <div class="w-full flex items-center justify-between">
+                        <span class="bg-indigo-100 text-indigo-700 font-bold px-4 py-1.5 rounded-full text-sm sm:text-base">
+                            🧍 Student Turn: What's this?
+                        </span>
+                        <button onclick="showAllVocabGrid()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-xl font-bold text-xs sm:text-sm transition">
+                            <i class="fas fa-th-large"></i> All Words
+                        </button>
+                    </div>
+
+                    <!-- Giant Flashcard (Picture First, Word Hidden!) -->
+                    <div onclick="revealVocabFlashcard()" id="flashcardBox"
+                        class="cursor-pointer ${currentUnit.lightColor} border-4 ${currentUnit.borderColor} rounded-3xl p-8 sm:p-10 w-full max-w-md flex flex-col items-center justify-center gap-6 card-shadow transition hover:brightness-95">
+                        
+                        <div class="text-8xl sm:text-9xl transform scale-125 py-4 animate-pop">
+                            ${currentVocabItem.emoji}
+                        </div>
+
+                        <!-- Hidden Answer Area -->
+                        <div id="flashcardRevealArea" class="w-full">
+                            <div class="bg-white/90 border-2 border-dashed ${currentUnit.borderColor} rounded-2xl py-4 px-6 flex items-center justify-center gap-2 text-slate-500 font-bold text-lg sm:text-xl">
+                                <i class="fas fa-eye"></i>
+                                <span>Say it aloud, then tap to check!</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teacher / Board Controls -->
+                    <div class="flex flex-wrap items-center justify-center gap-3 w-full">
+                        <button id="revealVocabBtn" onclick="revealVocabFlashcard()" 
+                            class="${currentUnit.color} text-white px-6 py-4 rounded-2xl font-bold text-lg sm:text-xl shadow-md flex items-center gap-2 transition active:scale-95">
+                            <i class="fas fa-volume-up"></i>
+                            <span>Check & Listen</span>
+                        </button>
+
+                        <button onclick="nextStudentVocab(true)" 
+                            class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-4 rounded-2xl font-bold text-lg sm:text-xl shadow-md flex items-center gap-2 transition active:scale-95">
+                            <span>Next Student</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function revealVocabFlashcard() {
+            const revealArea = document.getElementById('flashcardRevealArea');
+            if (!revealArea) return;
+            
+            revealArea.innerHTML = `
+                <div class="bg-white rounded-2xl py-3 px-6 shadow-sm flex items-center justify-center gap-3 animate-pop">
+                    <span class="font-bold text-3xl sm:text-4xl text-slate-800 capitalize">${currentVocabItem.word}</span>
+                    <i class="fas fa-volume-up ${currentUnit.textColor} text-2xl"></i>
+                </div>
+            `;
+            speak(currentVocabItem.word);
+        }
+
+        function nextStudentVocab(awardStar = false) {
+            if (awardStar) {
+                addStars(1);
+                showToast('⭐', 'Next student!');
+            }
+            renderVocabMode();
+        }
+
+        function showAllVocabGrid() {
+            const area = document.getElementById('activityArea');
+            area.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <p class="text-slate-600 font-bold text-base sm:text-lg">
+                            👀 Vocabulary Overview (Tap to hear)
+                        </p>
+                        <button onclick="renderVocabMode()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 shadow-sm">
+                            <i class="fas fa-user"></i> Back to Student Turns
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                        ${currentUnit.vocab.map(item => `
+                            <button onclick="speak('${item.word.replace(/'/g, "\\'")}')" 
+                                class="${currentUnit.lightColor} border-2 ${currentUnit.borderColor} rounded-3xl p-4 flex flex-col items-center justify-center gap-2 card-shadow hover:brightness-95 transition">
+                                <span class="text-5xl">${item.emoji}</span>
+                                <span class="font-bold text-lg text-slate-800 capitalize">${item.word}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * MODE 2: ORAL Q&A FOR STUDENTS AT THE BOARD
+         * The board asks the question aloud and shows the visual clue.
+         * The student answers ORALLY first, then taps "Reveal Answer" to check!
+         */
+        function renderSentencesMode() {
+            currentSentenceObj = currentUnit.generateSentence();
+            const area = document.getElementById('activityArea');
+
+            area.innerHTML = `
+                <div class="flex-1 flex flex-col items-center justify-between space-y-5 text-center">
+                    <div class="w-full flex items-center justify-between">
+                        <span class="bg-indigo-100 text-indigo-700 font-bold px-4 py-1.5 rounded-full text-sm sm:text-base">
+                            🗣️ Student Turn: Answer the Question!
+                        </span>
+                        <span class="text-xs sm:text-sm font-bold text-slate-400">${currentSentenceObj.label}</span>
+                    </div>
+
+                    <!-- Visual Clue + Spoken Question -->
+                    <div class="${currentUnit.lightColor} border-4 ${currentUnit.borderColor} rounded-3xl p-6 sm:p-8 w-full max-w-2xl flex flex-col items-center gap-5 shadow-inner">
+                        
+                        <!-- Big Visual Clue -->
+                        <div class="text-7xl sm:text-8xl tracking-widest py-2 animate-pop">
+                            ${currentSentenceObj.emojis.join(' ')}
+                        </div>
+
+                        <!-- Question Bubble (Board asks this!) -->
+                        <button onclick="speak('${currentSentenceObj.q.replace(/'/g, "\\'")}')" 
+                            class="bg-white border-2 border-slate-200 hover:border-indigo-400 rounded-2xl px-5 py-4 w-full shadow-sm flex items-center justify-between gap-3 transition">
+                            <span class="bg-amber-400 text-white font-bold w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-lg">?</span>
+                            <span class="font-bold text-xl sm:text-2xl text-slate-800 text-left flex-1">${currentSentenceObj.q}</span>
+                            <span class="bg-indigo-100 text-indigo-600 p-2.5 rounded-xl">
+                                <i class="fas fa-volume-up text-xl"></i>
+                            </span>
+                        </button>
+
+                        <!-- Hidden Answer Box (Student speaks first, then reveals!) -->
+                        <div id="sentenceAnswerBox" class="w-full">
+                            <button onclick="revealSentenceAnswer()" 
+                                class="w-full bg-white/80 hover:bg-white border-3 border-dashed ${currentUnit.borderColor} rounded-2xl px-5 py-4 flex items-center justify-center gap-3 text-slate-600 font-bold text-lg sm:text-xl transition">
+                                <i class="fas fa-eye text-2xl ${currentUnit.textColor}"></i>
+                                <span>Student speaks aloud ➡️ Tap to reveal answer!</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Next Student Controls -->
+                    <div class="flex flex-wrap items-center justify-center gap-3 w-full">
+                        <button onclick="speak('${currentSentenceObj.q.replace(/'/g, "\\'")}')" 
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-4 rounded-2xl font-bold text-lg shadow-md flex items-center gap-2 transition active:scale-95">
+                            <i class="fas fa-redo"></i>
+                            <span>Repeat Question</span>
+                        </button>
+
+                        <button onclick="nextStudentSentence()" 
+                            class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-4 rounded-2xl font-bold text-lg shadow-md flex items-center gap-2 transition active:scale-95">
+                            <span>Next Student</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Automatically ask the question aloud so the student hears it!
+            setTimeout(() => speak(currentSentenceObj.q), 250);
+        }
+
+        function revealSentenceAnswer() {
+            if (!currentSentenceObj) return;
+            const box = document.getElementById('sentenceAnswerBox');
+            if (!box) return;
+
+            box.innerHTML = `
+                <div onclick="speak('${currentSentenceObj.a.replace(/'/g, "\\'")}')" 
+                    class="cursor-pointer ${currentUnit.color} text-white rounded-2xl px-5 py-4 w-full shadow-md flex items-center justify-between gap-3 animate-pop">
+                    <span class="bg-white/25 text-white font-bold w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-lg">!</span>
+                    <span class="font-bold text-xl sm:text-2xl text-left flex-1">${currentSentenceObj.a}</span>
+                    <i class="fas fa-volume-up text-white text-2xl"></i>
+                </div>
+            `;
+            speak(currentSentenceObj.a);
+        }
+
+        function nextStudentSentence() {
+            addStars(1);
+            showToast('🌟', 'Great answer! Next student!');
+            renderSentencesMode();
+        }
+
+        /**
+         * MODE 3: TOUCH THE BOARD (PURE ORAL & VISUAL LISTENING)
+         * No written words on the cards! The student comes up to the board,
+         * listens to the spoken sentence/word, and taps the matching picture.
+         */
+        function renderGameMode() {
+            const pool = shuffle(currentUnit.vocab);
+            gameOptions = pool.slice(0, 4); // Pick 4 distinct options
+            gameTarget = pick(gameOptions);
+
+            // Use full unit sentences for authentic oral comprehension
+            let promptText = gameTarget.word;
+            if (currentUnit.id === 'starter') promptText = `It's ${gameTarget.word}.`;
+            if (currentUnit.id === 'unit1') promptText = `Where's my ${gameTarget.word}? Touch the ${gameTarget.word}!`;
+            if (currentUnit.id === 'unit2') promptText = `This is my ${gameTarget.word}.`;
+            if (currentUnit.id === 'unit3') promptText = `I've got a ${gameTarget.word}.`;
+            if (currentUnit.id === 'unit4') promptText = `Touch the ${gameTarget.word}!`;
+            if (currentUnit.id === 'unit5') promptText = `I can ${gameTarget.word}.`;
+            if (currentUnit.id === 'unit6') promptText = `I like ${gameTarget.word}.`;
+            if (currentUnit.id === 'festivals') promptText = `Touch the ${gameTarget.word}!`;
+
+            gameTarget.promptText = promptText;
+
+            const area = document.getElementById('activityArea');
+            area.innerHTML = `
+                <div class="flex-1 flex flex-col items-center justify-between space-y-5">
+                    <div class="w-full flex items-center justify-between">
+                        <span class="bg-amber-100 text-amber-800 font-bold px-4 py-1.5 rounded-full text-sm sm:text-base">
+                            👆 Student Turn: Listen & Touch the Board!
+                        </span>
+                        <button onclick="renderGameMode()" class="text-slate-400 hover:text-slate-600 font-bold text-sm flex items-center gap-1">
+                            <i class="fas fa-forward"></i> Skip
+                        </button>
+                    </div>
+
+                    <!-- Big Oral Prompt Button -->
+                    <button onclick="speak('${promptText.replace(/'/g, "\\'")}')" 
+                        class="speaking-pulse bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-3xl shadow-xl flex items-center gap-4 transition active:scale-95">
+                        <i class="fas fa-volume-up text-3xl sm:text-4xl"></i>
+                        <div class="text-left">
+                            <span class="block text-xs font-bold uppercase tracking-wider text-indigo-200">Listen carefully</span>
+                            <span class="text-lg sm:text-xl font-bold">Tap to Hear Again</span>
+                        </div>
+                    </button>
+
+                    <!-- 4 Pure Visual Choice Cards (NO TEXT so 1st graders rely on listening!) -->
+                    <div class="grid grid-cols-2 gap-4 sm:gap-5 w-full max-w-2xl flex-1">
+                        ${gameOptions.map(opt => `
+                            <button onclick="checkGameAnswer(this, '${opt.word.replace(/'/g, "\\'")}')" 
+                                class="bg-slate-50 hover:bg-indigo-50 border-4 border-slate-200 hover:border-indigo-300 rounded-3xl p-6 flex flex-col items-center justify-center gap-3 card-shadow transition min-h-[140px] sm:min-h-[170px]">
+                                <span class="text-6xl sm:text-7xl transform scale-110">${opt.emoji}</span>
+                                <span class="game-word-label hidden font-bold text-xl text-emerald-800 capitalize">${opt.word}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            // Automatically speak the prompt!
+            setTimeout(() => speak(promptText), 300);
+        }
+
+        function checkGameAnswer(btn, chosenWord) {
+            if (chosenWord === gameTarget.word) {
+                btn.classList.remove('border-slate-200', 'bg-slate-50');
+                btn.classList.add('border-emerald-500', 'bg-emerald-100', 'animate-pop');
+                const label = btn.querySelector('.game-word-label');
+                if (label) label.classList.remove('hidden');
+                
+                addStars(1);
+                showToast('🎉', `Yes! ${gameTarget.word}! Next student!`);
+                speak(`Yes! ${gameTarget.word}!`, () => {
+                    setTimeout(() => renderGameMode(), 900);
+                });
+            } else {
+                btn.classList.remove('border-slate-200');
+                btn.classList.add('border-rose-400', 'bg-rose-50', 'opacity-50');
+                showToast('🤔', 'Listen again!');
+                speak(`Try again! ${gameTarget.promptText}`);
+            }
+        }
+
+        /**
+         * MODE 4: SPEAK & PHONICS STUDIO
+         * Practices the exact Phonics tongue-twister and Functional Language from the syllabus,
+         * plus interactive microphone speech check if supported by the browser!
+         */
+        function renderSpeakMode() {
+            const p = currentUnit.phonics;
+            const func = currentUnit.functional;
+            const hasSpeechRec = ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+
+            const area = document.getElementById('activityArea');
+            area.innerHTML = `
+                <div class="space-y-6">
+                    <!-- Phonics Section -->
+                    <div class="${currentUnit.lightColor} border-2 ${currentUnit.borderColor} rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center gap-4 text-center sm:text-left">
+                            <div class="text-5xl bg-white p-3 rounded-2xl shadow-sm">${p.emoji}</div>
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wider ${currentUnit.textColor} bg-white px-2.5 py-0.5 rounded-full">
+                                    Phonics: ${p.sound}
+                                </span>
+                                <h3 class="text-xl sm:text-2xl font-bold text-slate-800 mt-1">"${p.phrase}"</h3>
+                            </div>
+                        </div>
+                        <button onclick="speak('${p.phrase.replace(/'/g, "\\'")}')" 
+                            class="${currentUnit.color} text-white px-5 py-3 rounded-2xl font-bold shadow-md flex items-center gap-2 shrink-0 hover:brightness-105 transition">
+                            <i class="fas fa-volume-up"></i>
+                            <span>Chant!</span>
+                        </button>
+                    </div>
+
+                    <!-- Functional Language Section -->
+                    <div class="bg-sky-50 border-2 border-sky-200 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center gap-4 text-center sm:text-left">
+                            <div class="text-5xl bg-white p-3 rounded-2xl shadow-sm">💬</div>
+                            <div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-sky-700 bg-white px-2.5 py-0.5 rounded-full">
+                                    Real-Life English
+                                </span>
+                                <h3 class="text-xl sm:text-2xl font-bold text-slate-800 mt-1">"${func}"</h3>
+                            </div>
+                        </div>
+                        <button onclick="speak('${func.replace(/'/g, "\\'")}')" 
+                            class="bg-sky-500 hover:bg-sky-600 text-white px-5 py-3 rounded-2xl font-bold shadow-md flex items-center gap-2 shrink-0 transition">
+                            <i class="fas fa-volume-up"></i>
+                            <span>Listen</span>
+                        </button>
+                    </div>
+
+                    <!-- Oral Speaking Challenge (Say the Word / Sentence!) -->
+                    <div id="speakChallengeBox" class="bg-indigo-50 border-2 border-indigo-200 rounded-3xl p-6 text-center space-y-4">
+                        <!-- Injected challenge -->
+                    </div>
+                </div>
+            `;
+
+            loadNewSpeakChallenge();
+        }
+
+        function loadNewSpeakChallenge() {
+            const challengeObj = Math.random() > 0.5 
+                ? { text: pick(currentUnit.vocab).word, emoji: '🗣️' }
+                : { text: currentUnit.generateSentence().a, emoji: '🌟' };
+
+            // Find matching emoji if it's a vocab word
+            const foundVocab = currentUnit.vocab.find(v => v.word === challengeObj.text);
+            if (foundVocab) challengeObj.emoji = foundVocab.emoji;
+
+            const hasSpeechRec = ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+            const box = document.getElementById('speakChallengeBox');
+
+            box.innerHTML = `
+                <span class="bg-indigo-600 text-white text-xs font-bold uppercase px-3 py-1 rounded-full">
+                    🎤 Your Turn to Speak!
+                </span>
+                <div class="text-5xl">${challengeObj.emoji}</div>
+                <p class="text-2xl sm:text-3xl font-bold text-indigo-900">"${challengeObj.text}"</p>
+
+                <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+                    <button onclick="speak('${challengeObj.text.replace(/'/g, "\\'")}')" 
+                        class="bg-white border-2 border-indigo-300 text-indigo-700 hover:bg-indigo-100 px-5 py-3 rounded-2xl font-bold flex items-center gap-2 transition">
+                        <i class="fas fa-ear-listen"></i> Hear it first
+                    </button>
+
+                    ${hasSpeechRec ? `
+                        <button id="micBtn" onclick="startSpeechCheck('${challengeObj.text.replace(/'/g, "\\'")}')" 
+                            class="bg-rose-500 hover:bg-rose-600 text-white px-6 py-3 rounded-2xl font-bold shadow-md flex items-center gap-2 transition">
+                            <i class="fas fa-microphone"></i>
+                            <span>Tap & Say It!</span>
+                        </button>
+                    ` : ''}
+
+                    <button onclick="completeOralSelfCheck()" 
+                        class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-3 rounded-2xl font-bold shadow-md flex items-center gap-2 transition">
+                        <i class="fas fa-check"></i> I said it! (+1 ⭐)
+                    </button>
+                </div>
+                <p id="speechHeardText" class="text-sm font-semibold text-indigo-600 min-h-[20px]"></p>
+            `;
+        }
+
+        function completeOralSelfCheck() {
+            addStars(1);
+            showToast('🌟', 'Super speaking!');
+            speak('Super speaking!', () => {
+                loadNewSpeakChallenge();
+            });
+        }
+
+        function startSpeechCheck(targetPhrase) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return;
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            const micBtn = document.getElementById('micBtn');
+            const heardText = document.getElementById('speechHeardText');
+
+            micBtn.classList.add('speaking-pulse', 'bg-amber-500');
+            micBtn.innerHTML = `<i class="fas fa-microphone-lines"></i> <span>Listening...</span>`;
+            heardText.textContent = "Speak now...";
+
+            recognition.start();
+
+            recognition.onresult = (event) => {
+                const spoken = event.results[0][0].transcript;
+                heardText.textContent = `You said: "${spoken}"`;
+                addStars(1);
+                showToast('🎤', `Awesome! "${spoken}"`);
+                speak("Awesome! Well done!", () => {
+                    loadNewSpeakChallenge();
+                });
+            };
+
+            recognition.onerror = () => {
+                heardText.textContent = "Couldn't hear clearly — try again or tap 'I said it!'";
+                micBtn.classList.remove('speaking-pulse', 'bg-amber-500');
+                micBtn.innerHTML = `<i class="fas fa-microphone"></i> <span>Tap & Say It!</span>`;
+            };
+
+            recognition.onend = () => {
+                if (micBtn) {
+                    micBtn.classList.remove('speaking-pulse', 'bg-amber-500');
+                    micBtn.innerHTML = `<i class="fas fa-microphone"></i> <span>Tap & Say It!</span>`;
+                }
+            };
+        }
+
+        // Initialize App on Load
+        window.onload = () => {
+            renderHome();
+        };
+    </script>
+</body>
+</html>
